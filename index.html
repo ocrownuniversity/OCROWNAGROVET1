@@ -515,12 +515,12 @@ let PRODUCTS = [
 ];
 
 let SERVICES = [
-  {id:1,title:'Veterinary Services',icon:'&#128004;',desc:'Professional veterinary care for all animals — diagnosis, treatment, vaccination, deworming and health management for livestock and pets.',img:'https://i.ibb.co/6cmcm3MV/image.jpg'},
-  {id:2,title:'Animal Feeds',icon:'&#127806;',desc:'High quality feeds for poultry, cattle, pigs, fish and more. Starter, grower and finisher feeds from trusted brands available.',img:'https://i.ibb.co/bgQyVpRD/image.jpg'},
-  {id:3,title:'Veterinary Drugs',icon:'&#128138;',desc:'Wide range of approved veterinary medicines, antibiotics, vitamins, vaccines and dewormers for all livestock and poultry.',img:'https://i.ibb.co/ZzJ7RVpZ/image.jpg'},
-  {id:4,title:'Farm Inputs',icon:'&#128668;',desc:'Quality fertilizers, pesticides, herbicides, seeds and farm equipment supplies to boost your crop production.',img:'https://i.ibb.co/8DGPVz0V/VFD03-1024x683.jpg'},
-  {id:5,title:'Poultry Management',icon:'&#128020;',desc:'Complete poultry farm setup, management advisory, disease control and vaccination programs for day-old chicks to layers.',img:'https://i.ibb.co/7d7J9Kxj/image.jpg'},
-  {id:6,title:'Delivery Service',icon:'&#128666;',desc:'Fast and reliable delivery of feeds, drugs and farm supplies directly to your farm or home within Ibadan and environs.',img:'https://i.ibb.co/Lz3rD8Z5/image.jpg'}
+  {id:1,title:'Veterinary Services',icon:'&#128004;',desc:'Professional veterinary care for all animals — diagnosis, treatment, vaccination, deworming and health management for livestock and pets.',img:'https://i.ibb.co/bgQyVpRD/image.jpg'},
+  {id:2,title:'Animal Feeds',icon:'&#127806;',desc:'High quality feeds for poultry, cattle, pigs, fish and more. Starter, grower and finisher feeds from trusted brands available.',img:'https://i.ibb.co/ZzJ7RVpZ/image.jpg'},
+  {id:3,title:'Veterinary Drugs',icon:'&#128138;',desc:'Wide range of approved veterinary medicines, antibiotics, vitamins, vaccines and dewormers for all livestock and poultry.',img:'https://i.ibb.co/8DGPVz0V/VFD03-1024x683.jpg'},
+  {id:4,title:'Farm Inputs',icon:'&#128668;',desc:'Quality fertilizers, pesticides, herbicides, seeds and farm equipment supplies to boost your crop production.',img:'https://i.ibb.co/7d7J9Kxj/image.jpg'},
+  {id:5,title:'Poultry Management',icon:'&#128020;',desc:'Complete poultry farm setup, management advisory, disease control and vaccination programs for day-old chicks to layers.',img:'https://i.ibb.co/Lz3rD8Z5/image.jpg'},
+  {id:6,title:'Delivery Service',icon:'&#128666;',desc:'Fast and reliable delivery of feeds, drugs and farm supplies directly to your farm or home within Ibadan and environs.',img:'https://i.ibb.co/MypRyxms/Perches.jpg'}
 ];
 
 let ORDERS = [];
@@ -615,7 +615,13 @@ function openAdminLogin(){document.getElementById('adminLoginModal').classList.a
 function closeAdminLogin(){document.getElementById('adminLoginModal').classList.remove('open');}
 function checkAdminLogin(){if(document.getElementById('adminPwdInput').value===ADMIN_PWD){closeAdminLogin();openAdmin();}else{document.getElementById('adminLoginErr').style.display='block';}}
 function openAdmin(){renderAdminStats();renderOrdersTable('all');renderAdminProducts();renderAdminServices();document.getElementById('adminPanel').classList.add('open');document.body.style.overflow='hidden';}
-function closeAdmin(){document.getElementById('adminPanel').classList.remove('open');document.body.style.overflow='';}
+function closeAdmin(){
+  document.getElementById('adminPanel').classList.remove('open');
+  document.body.style.overflow='';
+  renderProducts('all');
+  renderServices();
+  document.querySelectorAll('.filter-tab').forEach(function(t,i){if(i===0)t.classList.add('active');else t.classList.remove('active');});
+}
 
 /* ========== ADMIN TABS ========== */
 function switchAdminTab(tab,btn){
@@ -669,8 +675,9 @@ function addProduct(){
   if(!name||!price){err.style.display='block';err.textContent='Name and price are required.';return;}
   const img=pImgData||imgUrl||'';
   PRODUCTS.push({id:nextProdId++,cat,name,desc,price,unit,img});
-  renderProducts('all');document.querySelectorAll('.filter-tab').forEach((t,i)=>{if(i===0)t.classList.add('active');else t.classList.remove('active');});
   renderAdminProducts();
+  renderProducts('all');
+  document.querySelectorAll('.filter-tab').forEach(function(t,i){if(i===0)t.classList.add('active');else t.classList.remove('active');});
   document.getElementById('p_name').value='';document.getElementById('p_price').value='';document.getElementById('p_unit').value='';document.getElementById('p_desc').value='';document.getElementById('p_img_url').value='';document.getElementById('p_img_preview').style.display='none';document.getElementById('p_img_placeholder').style.display='block';pImgData='';
   showToast(name+' added to products!');
 }
@@ -704,7 +711,8 @@ function saveService(){
   }else{
     SERVICES.push({id:nextSvcId++,title,icon,desc,img});showToast(title+' added to services!');
   }
-  renderServices();renderAdminServices();
+  renderServices();
+  renderAdminServices();
   document.getElementById('s_title').value='';document.getElementById('s_icon').value='';document.getElementById('s_desc').value='';document.getElementById('s_img_url').value='';document.getElementById('s_img_preview').style.display='none';document.getElementById('s_img_placeholder').style.display='block';sImgData='';
 }
 function editService(id){
