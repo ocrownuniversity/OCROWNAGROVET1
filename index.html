@@ -391,7 +391,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--lime);}
   <div style="background:var(--dark);position:sticky;top:0;z-index:2;">
     <div class="admin-header">
       <div class="admin-title">OCROWN AGROVET <span class="admin-badge">Admin Panel</span></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="if(confirm('Reset ALL data to defaults? This cannot be undone.')){localStorage.clear();location.reload();}" style="background:rgba(200,50,50,.2);border:1px solid rgba(200,50,50,.4);color:#ffaaaa;font-family:DM Sans,sans-serif;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:7px 14px;cursor:pointer;border-radius:2px;">&#9888; Reset</button>
       <button class="admin-close-btn" onclick="closeAdmin()">&#10005; Exit</button>
+    </div>
     </div>
     <div class="admin-tabs">
       <button class="admin-tab-btn active" onclick="switchAdminTab('orders',this)">&#128203; Orders</button>
@@ -530,6 +533,31 @@ let nextSvcId = 7;
 let pImgData = '';
 let sImgData = '';
 
+/* ========== LOCALSTORAGE ========== */
+function saveData() {
+  try {
+    localStorage.setItem('oav_products', JSON.stringify(PRODUCTS));
+    localStorage.setItem('oav_services', JSON.stringify(SERVICES));
+    localStorage.setItem('oav_orders', JSON.stringify(ORDERS));
+    localStorage.setItem('oav_nextProdId', String(nextProdId));
+    localStorage.setItem('oav_nextSvcId', String(nextSvcId));
+  } catch(e) {}
+}
+function loadData() {
+  try {
+    var p = localStorage.getItem('oav_products');
+    var s = localStorage.getItem('oav_services');
+    var o = localStorage.getItem('oav_orders');
+    var np = localStorage.getItem('oav_nextProdId');
+    var ns = localStorage.getItem('oav_nextSvcId');
+    if(p) PRODUCTS = JSON.parse(p);
+    if(s) SERVICES = JSON.parse(s);
+    if(o) ORDERS = JSON.parse(o);
+    if(np) nextProdId = parseInt(np);
+    if(ns) nextSvcId = parseInt(ns);
+  } catch(e) {}
+}
+
 /* ========== RENDER WEBSITE ========== */
 function renderServices() {
   const grid = document.getElementById('servicesGrid');
@@ -605,7 +633,7 @@ function submitOrder(){
   const savedCart=[...cart];
   const total=savedCart.reduce((s,c)=>s+(c.price*c.qty),0);
   ORDERS.unshift({id:orderId,name,phone,address,notes,items:savedCart.length?savedCart.map(c=>c.name+' x'+c.qty).join(', '):items,customItems:items,cartItems:savedCart,total:total>0?total:null,status:'new',timestamp:new Date().toLocaleString('en-NG',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})});
-  cart=[];updateCartUI();
+  cart=[];saveData();updateCartUI();
   document.getElementById('orderContent').innerHTML=`<div style="text-align:center;padding:32px 0;"><div style="font-size:52px;margin-bottom:16px;">&#9989;</div><h2 style="font-size:22px;margin-bottom:10px;color:var(--green);">Order Received!</h2><p style="font-family:'Bitter',serif;font-size:15px;color:rgba(26,18,8,.6);margin-bottom:20px;line-height:1.7;">Thank you <strong>${name}</strong>! We will contact you on <strong>${phone}</strong> to confirm payment and arrange delivery.</p><div style="background:#faf6ee;border:1px solid rgba(26,18,8,.1);padding:16px;text-align:left;margin-bottom:20px;"><div style="font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--lime);margin-bottom:6px;">Order ID</div><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;">${orderId}</div></div><div style="font-family:'DM Sans',sans-serif;font-size:13px;color:rgba(26,18,8,.5);margin-bottom:20px;">Pay to: <strong>Stanbic IBTC &middot; 0007761996 &middot; Oladeji Opeyemi</strong></div><button class="btn-lime" onclick="closeOrder()">Close</button></div>`;
 }
 
@@ -654,7 +682,7 @@ function renderOrdersTable(filter){
 function statusLabel(s){return s==='new'?'&#128197; New':s==='confirmed'?'&#9989; Confirmed':s==='delivered'?'&#128230; Delivered':'&#10060; Cancelled';}
 function setOrderStatus(id,status){
   const o=ORDERS.find(o=>o.id===id);
-  if(o){o.status=status;showToast('Order '+id+' updated to '+status);renderAdminStats();const at=document.querySelector('.ftab.active');renderOrdersTable(at?at.textContent.trim().toLowerCase().split(' ').pop():'all');}
+  if(o){o.status=status;saveData();showToast('Order '+id+' updated to '+status);renderAdminStats();const at=document.querySelector('.ftab.active');renderOrdersTable(at?at.textContent.trim().toLowerCase().split(' ').pop():'all');}
 }
 function viewOrder(id){
   const o=ORDERS.find(o=>o.id===id);if(!o)return;
@@ -675,6 +703,7 @@ function addProduct(){
   if(!name||!price){err.style.display='block';err.textContent='Name and price are required.';return;}
   const img=pImgData||imgUrl||'';
   PRODUCTS.push({id:nextProdId++,cat,name,desc,price,unit,img});
+  saveData();
   renderAdminProducts();
   renderProducts('all');
   document.querySelectorAll('.filter-tab').forEach(function(t,i){if(i===0)t.classList.add('active');else t.classList.remove('active');});
@@ -684,6 +713,7 @@ function addProduct(){
 function deleteProduct(id){
   if(!confirm('Delete this product?'))return;
   PRODUCTS=PRODUCTS.filter(p=>p.id!==id);
+  saveData();
   renderProducts('all');renderAdminProducts();showToast('Product deleted.');
 }
 function renderAdminProducts(){
@@ -711,6 +741,7 @@ function saveService(){
   }else{
     SERVICES.push({id:nextSvcId++,title,icon,desc,img});showToast(title+' added to services!');
   }
+  saveData();
   renderServices();
   renderAdminServices();
   document.getElementById('s_title').value='';document.getElementById('s_icon').value='';document.getElementById('s_desc').value='';document.getElementById('s_img_url').value='';document.getElementById('s_img_preview').style.display='none';document.getElementById('s_img_placeholder').style.display='block';sImgData='';
@@ -734,6 +765,7 @@ function cancelEditService(){
 function deleteService(id){
   if(!confirm('Delete this service?'))return;
   SERVICES=SERVICES.filter(s=>s.id!==id);
+  saveData();
   renderServices();renderAdminServices();showToast('Service deleted.');
 }
 function renderAdminServices(){
@@ -766,6 +798,7 @@ function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('op
 function closeMenu(){document.getElementById('mobileMenu').classList.remove('open');}
 
 /* ========== INIT ========== */
+loadData();
 renderServices();
 renderProducts('all');
 </script>
